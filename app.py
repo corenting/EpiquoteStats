@@ -42,7 +42,15 @@ def import_quotes():
       session.add(quote)
       session.commit()
     page += 1
+  session.close()
 
+
+def get_authors_count():
+  session = Session()
+  result_rows = session.query(Quote.author, func.count(Quote.author)).group_by(Quote.author).order_by(func.count(Quote.author).desc()).all()
+  for r in result_rows:
+    print (r[0] + ' - ' + str(r[1]))
+  session.close()
 
 def error_exit():
   print('Import error', file=sys.stderr)
@@ -51,4 +59,4 @@ def error_exit():
 
 if __name__ == "__main__":
   Base.metadata.create_all(engine)
-  import_quotes()
+  get_authors_count()
