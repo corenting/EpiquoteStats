@@ -17,7 +17,7 @@ class Quote(Base):
   content = Column(String, nullable=False)
 
 
-def import_quotes():
+def update_db():
   # First, get number of pages
   req = requests.get('https://epiquote.fr/last')
   if req.status_code != 200:
@@ -34,14 +34,18 @@ def import_quotes():
     soup = BeautifulSoup(req.text, 'html.parser')
     quotes = soup.find_all(class_='span12')
     for q in quotes:
+      id = int(q.find('a').text[1:])
+      quote_db = session.query(Quote).filter_by(id = id).first()
+      if quote_db is not None:
+        continue
       author = q.find('strong').text
       context_soup = q.find('em')
       context = None if context_soup is None else context_soup.text
       content = q.find_all('p')[1].get_text('\n')
-      quote = Quote(author=author, content=content, context=context)
+      quote = Quote(id=id, author=author, content=content, context=context)
       session.add(quote)
-      session.commit()
     page += 1
+  session.commit()
   session.close()
 
 
@@ -59,4 +63,4 @@ def error_exit():
 
 if __name__ == "__main__":
   Base.metadata.create_all(engine)
-  get_authors_count()
+  update_db()
